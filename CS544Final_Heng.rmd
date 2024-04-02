@@ -1,0 +1,229 @@
+---
+title: "CS544Final_Heng"
+author: "Kyle Heng"
+date: "2024-02-27"
+output: html_document
+---
+
+# Importing Data
+
+The data being used for this analysis is a list of college majors with information pertaining to sex, earnings, and type of employment of the people who studied each major. 
+
+```{r}
+recent.grads <- read.csv("~/BU School Files/CS544//recent-grads.csv", header=T)
+```
+
+## Importing Process:
+
+* Downloaded raw csv file from source on Github
+
+* Imported file from my directory using read.csv
+
+* Set header = TRUE since column names are included in the original file.
+
+
+# **Categorical Variable Analysis**
+
+## This is a histogram of the frequencies of each Major Category being represented in the data.
+
+```{r}
+library(plotly)
+
+fig <- plot_ly(y = recent.grads$Major_category, type = "histogram")
+fig
+```
+
+From the bar plot, we can see an overwhelmingly large amount of representation from engineering majors. Types of majors that are under represented in this data can be categorized under communications/journalism or interdisciplinary majors.
+
+
+# **Numerical Variable Analysis**
+
+## This is a bar plot of unemployment rates for each of the majors represented in the data.
+
+```{r}
+fig <- plot_ly(x = recent.grads$Major,y = recent.grads$Unemployment_rate, type = "bar")
+fig
+```
+
+At a glance, we can see that majors with the highest rates of unemployment in the data include Nuclear Engineering, Clinical Psychology, Computer Networking/Telecommunications, and Public Administration.
+
+## Majors of Top 10 Unemployment Rates:
+
+```{r}
+top <- tail(sort(recent.grads$Unemployment_rate),10)
+topsub <- subset(recent.grads, Unemployment_rate %in% top)
+select(topsub, c('Major', 'Unemployment_rate'))
+```
+
+## Majors of Lowest 10 Unemployment Rates:
+
+```{r}
+bottom <- head(sort(recent.grads$Unemployment_rate),10)
+bottomsub <- subset(recent.grads, Unemployment_rate %in% bottom)
+select(bottomsub, c('Major', 'Unemployment_rate'))
+```
+# **Bivariate Analysis**
+
+## Analysis of Relationships between Major Category/Sex and Major Category/Unemployment Rate:
+
+
+Box plots of Proportion of Women per Major Category
+```{r}
+fig <- plot_ly(recent.grads, y = ~ShareWomen, color = ~Major_category, type = "box")
+fig
+```
+
+From the box plots, we can see that the types of majors with the highest average percentage of women include Arts, Health and Education. Computer/Mathematics and Engineering majors have much lower female representation in the data. Industrial Arts/Consumer Services majors also have lower female representation but they have the largest standard deviation of proportions.
+
+Box plots of Unemployment Rate per Major Category
+```{r}
+fig <- plot_ly(recent.grads, y = ~Unemployment_rate, color = ~Major_category, type = "box")
+fig
+```
+Major Categories with the highest average unemployment rate include Social Sciences, Arts, and Computer & Mathematics. Physical Sciences and Education Majors have less unemployment on average while Law and Public Policy majors have the largest standard deviation of unemployment rate.
+
+# **Examining Distribution of Median Earnings of Year-Round Full-Time Workers**
+
+```{r}
+x <- recent.grads$Median
+fig <- plot_ly(x=x, type = "histogram")
+fig
+```
+```{R}
+mean(x)
+sd(x)
+```
+
+
+From the histogram, we can see that the median earnings are right skewed. Therefore, a majority of majors represented by the data will make less than the mean value of $40.151.45 with a select few making a much higher amount.
+
+
+# **Drawing Random Samples of Various Sizes From Median Earnings Data**
+
+## Drawing 1000 samples of sample sizes 20,40,60,80: 
+
+```{r}
+samples <- 1000
+xbar20 <- numeric(samples)
+xbar40 <- numeric(samples)
+xbar60 <- numeric(samples)
+xbar80 <- numeric(samples)
+
+x <- recent.grads$Median
+for (i in 1:samples) {
+  xbar20[i] <- mean(sample(x, size = 20, replace = F))
+  xbar40[i] <- mean(sample(x, size = 40, replace = F))
+  xbar60[i] <- mean(sample(x, size = 60, replace = F))
+  xbar80[i] <- mean(sample(x, size = 80, replace = F))
+}
+```
+
+## Histograms of the Sample Means For Each Sample Size:
+
+```{r}
+fig1 <- plot_ly(x=xbar20, type = "histogram", name = "n=20")
+fig2 <- plot_ly(x=xbar40, type = "histogram", name = "n=40")
+fig3 <- plot_ly(x=xbar60, type = "histogram", name = "n=60")
+fig4 <- plot_ly(x=xbar80, type = "histogram", name = "n=80")
+
+fig <- subplot(fig1, fig2, fig3, fig4, nrows = 2) %>%
+  layout(plot_bgcolor='#e5ecf6', 
+         xaxis = list( 
+           zerolinecolor = '#ffff', 
+           zerolinewidth = 2, 
+           gridcolor = 'ffff'), 
+         yaxis = list( 
+           zerolinecolor = '#ffff', 
+           zerolinewidth = 2, 
+           gridcolor = 'ffff'))
+fig
+```
+
+The shape of the distribution starts off right skewed with sample size 20, similar to the original data. As larger samples are taken, the distribution becomes less skewed and follows a more symmetrical bell-curve. This is very apparent in the histograms of sample sizes 60 and 80. These findings fall in line with the Central Limit Theorem, supporting the notion that the distribution of sample means will always be normal, given that the sample size is large enough. 
+
+# **Sampling with Other Types of Sampling Methods**
+
+## A sample size of 60 will be taken for all methods.
+
+## Simple Random Sample with Replacement
+```{r}
+library(sampling)
+s <- srswr(60, nrow(recent.grads))
+
+srs <- recent.grads[s != 0,]
+```
+
+## Systematic Sampling with Unequal Probabilities
+
+```{r}
+pik <- inclusionprobabilities(recent.grads$Median, 60)
+
+s <- UPsystematic(pik)
+sys<- recent.grads[s != 0,]
+```
+
+# Histograms Comparing Whole Data with Various Samples
+
+```{r}
+fig1 <- plot_ly(x=recent.grads$Median, type = "histogram", name = "Original Data")
+fig2 <- plot_ly(x=xbar60, type = "histogram", name = "sample() function n=60")
+fig3 <- plot_ly(x=srs$Median, type = "histogram", name = "Simple Random Sampling")
+fig4 <- plot_ly(x=sys$Median, type = "histogram", name = "Systematic Sampling")
+
+fig <- subplot(fig1, fig2, fig3, fig4, nrows = 2) %>%
+  layout(plot_bgcolor='#e5ecf6', 
+         xaxis = list( 
+           zerolinecolor = '#ffff', 
+           zerolinewidth = 2, 
+           gridcolor = 'ffff'), 
+         yaxis = list( 
+           zerolinecolor = '#ffff', 
+           zerolinewidth = 2, 
+           gridcolor = 'ffff'))
+fig
+```
+
+Given a sample size of 60, we can see that the sample() function draws samples that follow the normal distribution more closely that simple random sampling or systematic sampling. Systematic sampling seems to be the most skewed out of the four examples while simple random sampling is only slightly less skewed than the original data.
+
+# **Further Areas of Analysis Using Data Wrangling**
+
+## Average Median Income By Major Category
+
+```{r}
+library(tidyverse)
+recent.grads %>%
+  group_by(Major_category) %>%
+  summarise(avgMedian <- mean(Median))
+```
+Based on the data, Engineering majors earn the highest median income while Psychology & Social Work majors earn the least amount on average.
+
+
+## Average Proportions of Fulltime/Parttime Status of Employees by Major Category
+```{r}
+recent.grads %>%
+  drop_na() %>%
+  group_by(Major_category) %>%
+  mutate(ftprop = Full_time/Total, ptprop = Part_time/Total, FtYrProp = Full_time_year_round/Total, na.rm=T) %>%
+  summarise(avgFt = mean(ftprop), avgPt = mean(ptprop), avgFtYd = mean(FtYrProp))
+```
+
+Industrial Arts & Consumer Services have the highest proportion of full time employees out of all major categories while Biology and Life Sciences has the lowest proportion of full timers. When taking into consideration employees that are full time year round, these same findings apply as well.
+
+Business has the lowest proportion of part time employees while the Arts major category has the highest.
+
+
+## Average Proportions of Employees with a Job Requiring a College Degree by Major Category
+
+```{r}
+recent.grads %>%
+  drop_na() %>%
+  group_by(Major_category) %>%
+  mutate(degree = College_jobs/Total, nodegree = Non_college_jobs/Total, lowwage = Low_wage_jobs/Total, na.rm=T) %>%
+  summarise(avgDegree = mean(degree), avgNonDegree = mean(nodegree), avgLowWage = mean(lowwage))
+```
+
+The major with the highest proportion of people in a job requiring a degree was Education majors. The lowest proportion studied Business.
+
+The major with the highest proportion of people in a job not requiring a degree was Arts majors while the lowest was Engineering majors.
+
+The major with the highest proportion of low wage earners in the data was Arts majors while the major with the lowest proportion was Engineering Majors.
