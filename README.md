@@ -5,7 +5,7 @@ This course is part of the core curriculum of the MS in Applied Data Analytics P
 
 ## Project Objective:
 
-The data being analyzed originates from the American Communityu Survey 2010-2012 Public Use Microdata Series, introduced to me through the following github repsotiory:
+The data being analyzed originates from the American Community Survey 2010-2012 Public Use Microdata Series, introduced to me through the following github repsotiory:
 https://github.com/fivethirtyeight/data/tree/master/college-majors
 
 The data comprises of a list of college majors with categorical attributes pertaining to the types of people who study each major.
